@@ -55,7 +55,7 @@ function to24h(timeStr: string): string {
 }
 
 // Matrix/glitch scramble: characters resolve left-to-right to target string
-function ArtistLabel({ artist }: { artist: Artist }) {
+function ArtistLabel({ artist, muted }: { artist: Artist; muted?: boolean }) {
   const targetTime = artist.endTime
     ? `${to24h(artist.time)}–${to24h(artist.endTime)}`
     : to24h(artist.time);
@@ -102,8 +102,8 @@ function ArtistLabel({ artist }: { artist: Artist }) {
 
   return (
     <div
-      className="uppercase cursor-pointer select-none text-black"
-      style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', letterSpacing: '-0.64px', maxWidth: '180px' }}
+      className="uppercase cursor-pointer select-none"
+      style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', letterSpacing: '-0.64px', maxWidth: '180px', color: muted ? '#a0a0a0' : '#000000' }}
       onMouseEnter={() => scrambleTo(targetTime)}
       onMouseLeave={() => scrambleTo(artist.name)}
     >
@@ -113,6 +113,18 @@ function ArtistLabel({ artist }: { artist: Artist }) {
 }
 
 const LIVE_LEFT_PCT = timeToPercent('6:00PM');
+const LIVE_MINUTES = 18 * 60; // 6:00PM in minutes from midnight
+
+function parseToMinutes(timeStr: string): number {
+  const match = timeStr.match(/^(\d+):?(\d*)([AP]M)$/i);
+  if (!match) return 0;
+  let hour = parseInt(match[1]);
+  const min = parseInt(match[2] || '0');
+  const period = match[3].toUpperCase();
+  if (period === 'PM' && hour !== 12) hour += 12;
+  if (period === 'AM' && hour === 12) hour = 0;
+  return hour * 60 + min;
+}
 
 function LiveIndicator() {
   return (
@@ -231,12 +243,15 @@ export default function SchedulePage() {
                   className="absolute"
                   style={{ left: `${timeToPercent(artist.time)}%`, top: rowTop + ARTIST_OFFSET }}
                 >
-                  <ArtistLabel artist={artist} />
+                  <ArtistLabel
+                    artist={artist}
+                    muted={activeDate === 'sat' && parseToMinutes(artist.endTime ?? artist.time) <= LIVE_MINUTES}
+                  />
                 </div>
               ));
             })}
 
-            <LiveIndicator />
+            {activeDate === 'sat' && <LiveIndicator />}
 
             {/* Hour columns */}
             {HOURS.map((hour, i) => {

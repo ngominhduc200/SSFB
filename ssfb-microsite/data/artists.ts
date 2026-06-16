@@ -33,7 +33,36 @@ export const saturdayArtists: Artist[] = [
   { id: 'i-f',                       stageId: 'stage-c', name: 'I-F',                                time: '10:00PM', endTime: '11:00PM', coverImage: '', bio: '', isLive: false },
 ];
 
-export const sundayArtists: Artist[] = [];
+export const sundayArtists: Artist[] = [
+  // Stage A — THE REST IS NOISE
+  { id: 'osdorp-tapes',               stageId: 'stage-a', name: 'OSDORP TAPES',                     time: '12:00PM', endTime: '1:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'izabel',                     stageId: 'stage-a', name: 'IZABEL',                            time: '2:00PM',  endTime: '3:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'strange-boutique',           stageId: 'stage-a', name: 'STRANGE BOUTIQUE',                  time: '4:00PM',  endTime: '5:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'letta-mbulu',                stageId: 'stage-a', name: 'LETTA MBULU',                       time: '5:00PM',  endTime: '6:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'african-acid',               stageId: 'stage-a', name: 'AFRICAN ACID IS THE FUTURE',        time: '6:00PM',  endTime: '7:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'shanbehzadeh-ensemble',      stageId: 'stage-a', name: 'SHANBEHZADEH ENSEMBLE',             time: '7:00PM',  endTime: '8:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'rabih-beaini',               stageId: 'stage-a', name: 'RABIH BEAINI',                      time: '8:00PM',  endTime: '9:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'anmar-808',                  stageId: 'stage-a', name: 'ANMAR 808',                         time: '10:00PM', endTime: '11:00PM', coverImage: '', bio: '', isLive: false },
+
+  // Stage B — RED LIGHT RADIO
+  { id: 'fenna-fiction',              stageId: 'stage-b', name: 'FENNA FICTION',                     time: '12:00PM', endTime: '1:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'dollkraut-band',             stageId: 'stage-b', name: 'DOLLKRAUT BAND',                    time: '1:00PM',  endTime: '2:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'twice-upon-a-time',          stageId: 'stage-b', name: 'TWICE UPON A TIME',                 time: '2:00PM',  endTime: '4:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'ramzi-dj-fati',             stageId: 'stage-b', name: 'RAMZI / DJ FATI',                   time: '4:00PM',  endTime: '6:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'die-orangen',               stageId: 'stage-b', name: 'DIE ORANGEN',                       time: '6:00PM',  endTime: '7:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'mad-miran',                  stageId: 'stage-b', name: 'MAD MIRAN',                         time: '7:00PM',  endTime: '8:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'dj-marcelle',               stageId: 'stage-b', name: 'DJ MARCELLE',                       time: '8:00PM',  endTime: '10:00PM', coverImage: '', bio: '', isLive: false },
+  { id: 'identified-patient',         stageId: 'stage-b', name: 'IDENTIFIED PATIENT',                time: '10:00PM', endTime: '11:00PM', coverImage: '', bio: '', isLive: false },
+
+  // Stage C — TENT
+  { id: 'satoshi',                    stageId: 'stage-c', name: 'SATOSHI',                           time: '12:00PM', endTime: '2:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'margie',                     stageId: 'stage-c', name: 'MARGIE',                            time: '2:00PM',  endTime: '3:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'dj-paulao',                  stageId: 'stage-c', name: 'DJ PAULÃO',                         time: '3:00PM',  endTime: '4:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'young-marco',                stageId: 'stage-c', name: 'YOUNG MARCO',                       time: '4:00PM',  endTime: '5:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'leroy-burgess',              stageId: 'stage-c', name: 'LEROY BURGESS',                     time: '6:00PM',  endTime: '7:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'antal',                      stageId: 'stage-c', name: 'ANTAL',                             time: '7:00PM',  endTime: '9:00PM',  coverImage: '', bio: '', isLive: false },
+  { id: 'hunee',                      stageId: 'stage-c', name: 'HUNEE',                             time: '9:00PM',  endTime: '11:00PM', coverImage: '', bio: '', isLive: false },
+];
 
 // Default export keeps existing imports working
 export const artists = saturdayArtists;
