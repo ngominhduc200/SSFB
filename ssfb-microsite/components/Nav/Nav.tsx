@@ -7,7 +7,7 @@ export default function Nav() {
     <nav className="fixed top-0 left-0 right-0 z-50 pt-[24px] px-[24px]">
       <div className="w-full flex items-center">
         <Link
-          href="/"
+          href="/home"
           className="font-[family-name:var(--font-ui)] font-semibold text-[16px] uppercase text-red tracking-[-0.64px]"
         >
           SSFB
