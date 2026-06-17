@@ -19,27 +19,37 @@ const STAGE_COLORS: Record<string, string> = {
 };
 
 // Artists with click-to-play functionality
-const PLAYABLE_IDS = new Set(['nihiloxica', 'vladimir-ivkovic-b', 'alessandro-adriani']);
+const PLAYABLE_IDS = new Set(['nihiloxica', 'vladimir-ivkovic-1', 'alessandro-adriani-the-hacker']);
 
 const ARTIST_AUDIO: Record<string, string> = {
-  'nihiloxica': '/audio/nihiloxica.mp3',
-  'vladimir-ivkovic-b': '/audio/vladimir.mp3',
-  'alessandro-adriani': '/audio/alessandro.mp3',
+  'nihiloxica':                    '/audio/Nihiloxica.mp3',
+  'vladimir-ivkovic-1':            '/audio/Vladimir.mp3',
+  'alessandro-adriani-the-hacker': '/audio/Alessandro.mp3',
 };
 
 const GLITCH_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#!|/\\><^';
 const GLITCH_FRAMES = 22;
 
 function timeToPercent(timeStr: string): number {
+  // Our format: 'SAT 12:00–14:00' — use the start time
+  const ourMatch = timeStr.match(/[A-Z]{3}\s+(\d{1,2}):(\d{2})/);
+  if (ourMatch) {
+    const totalMinutes = (parseInt(ourMatch[1]) - START_HOUR) * 60 + parseInt(ourMatch[2]);
+    return (totalMinutes / (TOTAL_HOURS * 60)) * 100;
+  }
+  // Fallback: '1:00PM' format
   const [timePart, period] = timeStr.split(/(?=[AP]M)/);
   const [h, m = '0'] = timePart.split(':');
   let hour = parseInt(h);
   if (period === 'PM' && hour !== 12) hour += 12;
-  const totalMinutes = (hour - START_HOUR) * 60 + parseInt(m);
-  return (totalMinutes / (TOTAL_HOURS * 60)) * 100;
+  return (((hour - START_HOUR) * 60 + parseInt(m)) / (TOTAL_HOURS * 60)) * 100;
 }
 
 function to24h(timeStr: string): string {
+  // Our format: 'SAT 12:00–14:00' → '12:00'
+  const ourMatch = timeStr.match(/[A-Z]{3}\s+(\d{1,2}:\d{2})/);
+  if (ourMatch) return ourMatch[1];
+  // '2:00PM' format → '14:00'
   const match = timeStr.match(/^(\d+):?(\d*)([AP]M)$/i);
   if (!match) return timeStr;
   let hour = parseInt(match[1]);
