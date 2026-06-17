@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { playClickSound } from '@/utils/playClickSound';
 
 type NavStripProps = {
   currentStage?: string;
   currentStageId?: string;
   liveInfo?: string;
+  liveInfoVisible?: boolean;
   otherStages?: { label: string; id: string }[];
   prevArtist?: string;
   prevArtistId?: string;
@@ -26,19 +28,20 @@ function Chip({
 }) {
   const base =
     'h-[26px] flex items-center px-[13px] font-[family-name:var(--font-ui)] text-[16px] uppercase tracking-[-0.64px] whitespace-nowrap rounded-[2px]';
-  const colors =
+
+  const style =
     variant === 'black'
-      ? 'bg-black text-red'
-      : 'bg-red-dark text-red-muted';
+      ? { background: '#000000', color: '#ffffff' }
+      : { background: '#B90000', color: '#ffffff' };
 
   if (href) {
     return (
-      <Link href={href} className={`${base} ${colors}`}>
+      <Link href={href} className={base} style={style} onClick={playClickSound}>
         {children}
       </Link>
     );
   }
-  return <div className={`${base} ${colors}`}>{children}</div>;
+  return <div className={base} style={style}>{children}</div>;
 }
 
 function Connector() {
@@ -49,6 +52,7 @@ export default function NavStrip({
   currentStage,
   currentStageId,
   liveInfo,
+  liveInfoVisible = true,
   otherStages = [],
   prevArtist,
   prevArtistId,
@@ -60,13 +64,25 @@ export default function NavStrip({
   const isSetlistMode = !!(currentArtist);
 
   return (
-    <div className="w-full h-[46px] flex items-center px-[34px] gap-0 border-t border-[#454545] flex-shrink-0">
-      {/* Left: current stage */}
+    <div className="fixed bottom-[24px] left-[24px] right-[24px] z-40 flex items-center gap-0">
+      {/* Left: current stage — always visible */}
       {currentStage && currentStageId && (
-        <>
-          <Chip href={`/stage/${currentStageId}`}>{currentStage}</Chip>
+        <Chip href={`/stage/${currentStageId}`}>{currentStage}</Chip>
+      )}
+
+      {/* Stage artists mode: live info expands from left after entry sequence */}
+      {!isSetlistMode && liveInfo && (
+        <div
+          className="flex items-center overflow-hidden"
+          style={{
+            maxWidth: liveInfoVisible ? '400px' : '0px',
+            opacity: liveInfoVisible ? 1 : 0,
+            transition: 'max-width 2s cubic-bezier(0.4,0,0.2,1), opacity 1.2s ease',
+          }}
+        >
           <Connector />
-        </>
+          <Chip variant="dark-red">{liveInfo}</Chip>
+        </div>
       )}
 
       {/* Setlist mode: prev → current → next */}
@@ -74,12 +90,13 @@ export default function NavStrip({
         <>
           {prevArtist && prevArtistId && currentStageId && (
             <>
+              <Connector />
               <Chip href={`/stage/${currentStageId}/${prevArtistId}`} variant="dark-red">
                 {prevArtist}
               </Chip>
-              <Connector />
             </>
           )}
+          <Connector />
           <Chip variant="dark-red">
             {currentArtist}&nbsp;&nbsp;{artistTime}
           </Chip>
@@ -92,11 +109,6 @@ export default function NavStrip({
             </>
           )}
         </>
-      )}
-
-      {/* Stage artists mode: live info */}
-      {!isSetlistMode && liveInfo && (
-        <Chip variant="dark-red">{liveInfo}</Chip>
       )}
 
       {/* Right: other stages */}

@@ -1,30 +1,26 @@
 'use client';
 
 import Link from 'next/link';
+import { playClickSound } from '@/utils/playClickSound';
+
+const linkStyle = {
+  fontFamily: 'var(--font-ui)',
+  fontWeight: 600,
+  fontSize: '16px',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '-0.64px',
+  color: '#FF0000',
+  mixBlendMode: 'difference' as const,
+};
 
 export default function Nav() {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 pt-[24px] px-[24px]">
-      <div className="w-full flex items-center">
-        <Link
-          href="/home"
-          className="font-[family-name:var(--font-ui)] font-semibold text-[16px] uppercase text-red tracking-[-0.64px]"
-        >
-          SSFB
-        </Link>
-        <div className="ml-auto w-[240px] flex items-center justify-between">
-          <Link
-            href="/explore"
-            className="font-[family-name:var(--font-ui)] font-semibold text-[16px] uppercase text-red tracking-[-0.64px]"
-          >
-            MAP
-          </Link>
-          <Link
-            href="/schedule"
-            className="font-[family-name:var(--font-ui)] font-semibold text-[16px] uppercase text-red tracking-[-0.64px]"
-          >
-            SCHEDULE
-          </Link>
+    <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, padding: '24px 24px 0' }}>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <Link href="/home" style={linkStyle} onClick={playClickSound}>SSFB</Link>
+        <div style={{ marginLeft: 'auto', width: '240px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link href="/explore" style={linkStyle} onClick={playClickSound}>MAP</Link>
+          <Link href="/schedule" style={linkStyle} onClick={playClickSound}>SCHEDULE</Link>
         </div>
       </div>
     </nav>

@@ -4,19 +4,19 @@ export const stages: Stage[] = [
   {
     id: 'stage-a',
     name: 'THE REST IS NOISE',
-    label: 'STAGE A',
+    label: 'THE REST IS NOISE',
     isLive: false,
   },
   {
     id: 'stage-b',
     name: 'RED LIGHT RADIO',
-    label: 'STAGE B',
+    label: 'RED LIGHT RADIO',
     isLive: false,
   },
   {
     id: 'stage-c',
     name: 'TENT',
-    label: 'STAGE C',
+    label: 'TENT',
     isLive: false,
   },
 ];

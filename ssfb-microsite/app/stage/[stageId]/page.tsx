@@ -1,97 +1,71 @@
 'use client';
 
-// Stage artists canvas: /stage/[stageId]
-// Pannable canvas with artist cards that flip on click
-import { useRef, useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { notFound } from 'next/navigation';
 import { stages } from '@/data/stages';
 import { artists } from '@/data/artists';
-import ArtistCard from '@/components/ArtistCard/ArtistCard';
 import NavStrip from '@/components/NavStrip/NavStrip';
-
-// Canvas positions matching Figma layout (within 2094×1411 canvas)
-const CARD_POSITIONS = [
-  { x: 690,  y: 493 },  // LIVE card — center
-  { x: 253,  y: 237 },  // top-left
-  { x: 954,  y: 43  },  // top-center
-  { x: 1416, y: 237 },  // top-right
-  { x: 135,  y: 781 },  // bottom-left
-  { x: 967,  y: 918 },  // bottom-center
-  { x: 1499, y: 781 },  // bottom-right
-];
+import StageScene from '@/components/StageScene/StageScene';
 
 export default function StageArtistsPage({ params }: { params: { stageId: string } }) {
   const stage = stages.find((s) => s.id === params.stageId);
   if (!stage) notFound();
 
   const stageArtists = artists.filter((a) => a.stageId === params.stageId);
-  // Sort so live artist is first (gets the LIVE card position)
   const sorted = [...stageArtists].sort((a, b) => (b.isLive ? 1 : 0) - (a.isLive ? 1 : 0));
+  const liveArtist = stageArtists.find((a) => a.isLive);
   const otherStages = stages.filter((s) => s.id !== params.stageId);
 
-  const [offset, setOffset] = useState({ x: -400, y: -200 });
-  const isDragging = useRef(false);
-  const lastPos = useRef({ x: 0, y: 0 });
+  const [liveInfoVisible, setLiveInfoVisible] = useState(false);
+  const heroRef = useRef<HTMLDivElement>(null);
 
-  function onMouseDown(e: React.MouseEvent) {
-    if ((e.target as HTMLElement).closest('[data-card]')) return;
-    isDragging.current = true;
-    lastPos.current = { x: e.clientX, y: e.clientY };
-    e.preventDefault();
-  }
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (heroRef.current) heroRef.current.style.opacity = '1';
+      setLiveInfoVisible(true);
+    }, 50);
+    return () => clearTimeout(t);
+  }, []);
 
-  function onMouseMove(e: React.MouseEvent) {
-    if (!isDragging.current) return;
-    const dx = e.clientX - lastPos.current.x;
-    const dy = e.clientY - lastPos.current.y;
-    setOffset((o) => ({ x: o.x + dx, y: o.y + dy }));
-    lastPos.current = { x: e.clientX, y: e.clientY };
-  }
-
-  function onMouseUp() {
-    isDragging.current = false;
-  }
+  // Direct DOM manipulation — no React re-render, no scroll interruption
+  const handleFirstScroll = useCallback(() => {
+    if (heroRef.current) heroRef.current.style.opacity = '0';
+  }, []);
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden bg-white">
-      {/* Pannable canvas wrapper */}
+    <div className="fixed inset-0 overflow-hidden">
+      <StageScene
+        artists={sorted}
+        stageId={params.stageId}
+        onFirstScroll={handleFirstScroll}
+      />
+
       <div
-        className="flex-1 overflow-hidden relative cursor-grab active:cursor-grabbing select-none"
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
-        onMouseLeave={onMouseUp}
+        ref={heroRef}
+        className="fixed inset-0 flex items-center justify-center pointer-events-none z-20"
+        style={{ opacity: 0, transition: 'opacity 0.8s ease' }}
       >
-        {/* Canvas */}
-        <div
-          className="absolute"
+        <h1
           style={{
-            width: 2094,
-            height: 1411,
-            transform: `translate(${offset.x}px, ${offset.y}px)`,
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(60px, 8vw, 120px)',
+            fontWeight: 600,
+            lineHeight: 0.9,
+            textAlign: 'center',
+            textTransform: 'uppercase',
+            color: '#000000',
+            letterSpacing: '-0.02em',
           }}
         >
-          {sorted.map((artist, i) => {
-            const pos = CARD_POSITIONS[i % CARD_POSITIONS.length];
-            return (
-              <div
-                key={artist.id}
-                data-card="true"
-                className="absolute"
-                style={{ left: pos.x, top: pos.y }}
-              >
-                <ArtistCard artist={artist} stageId={params.stageId} />
-              </div>
-            );
-          })}
-        </div>
+          {stage.name}
+        </h1>
       </div>
 
-      {/* NavStrip */}
       <NavStrip
         currentStage={stage.label}
         currentStageId={stage.id}
-        liveInfo={stage.liveArtist ? `· LIVE NOW: ${stage.liveArtist}` : undefined}
+        liveInfo={liveArtist ? `· LIVE NOW: ${liveArtist.name}` : undefined}
+        liveInfoVisible={liveInfoVisible}
         otherStages={otherStages.map((s) => ({ label: s.label, id: s.id }))}
       />
     </div>
