@@ -19,11 +19,12 @@ const STAGE_COLORS: Record<string, string> = {
 };
 
 // Artists with click-to-play functionality
-const PLAYABLE_IDS = new Set(['nihiloxica', 'vladimir-ivkovic-1', 'alessandro-adriani-the-hacker']);
+const PLAYABLE_IDS = new Set(['nihiloxica', 'vladimir-ivkovic-1', 'vladimir-ivkovic-2', 'alessandro-adriani-the-hacker']);
 
 const ARTIST_AUDIO: Record<string, string> = {
   'nihiloxica':                    '/audio/Nihiloxica.mp3',
   'vladimir-ivkovic-1':            '/audio/Vladimir.mp3',
+  'vladimir-ivkovic-2':            '/audio/Vladimir.mp3',
   'alessandro-adriani-the-hacker': '/audio/Alessandro.mp3',
 };
 
