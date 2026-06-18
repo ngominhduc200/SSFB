@@ -7,7 +7,6 @@ import { artists } from '@/data/artists';
 import NavStrip from '@/components/NavStrip/NavStrip';
 import StippleText from '@/components/StippleText/StippleText';
 import { playClickSound } from '@/utils/playClickSound';
-import { getCurrentLive } from '@/utils/liveArtist';
 
 const IMG_STAR      = '/images/vinyl-disc.svg';
 const IMG_RED       = '/images/vinyl-red.svg';
@@ -472,12 +471,12 @@ export default function SetlistPage({
     return () => clearTimeout(t);
   }, []);
 
-  const [liveArtist, setLiveArtist] = useState(() => getCurrentLive(stageArtists));
-  useEffect(() => {
-    const tick = () => setLiveArtist(getCurrentLive(stageArtists));
-    const id = setInterval(tick, 60_000);
-    return () => clearInterval(id);
-  }, []);
+  const STAGE_LIVE: Record<string, string> = {
+    'stage-a': 'nihiloxica',
+    'stage-b': 'vladimir-ivkovic-2',
+    'stage-c': 'alessandro-adriani-the-hacker',
+  };
+  const liveArtist = artists.find(a => a.id === STAGE_LIVE[params.stageId]);
 
   // Entrance animation states
   const [wheelIn, setWheelIn] = useState(false);
@@ -506,6 +505,18 @@ export default function SetlistPage({
   // Restore ambient when leaving the setlist page while track is playing
   useEffect(() => {
     return () => { document.dispatchEvent(new CustomEvent('ambient-restore')); };
+  }, []);
+
+  // Pause wheel and restore ambient when track reaches the end
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onEnded = () => {
+      setIsPlaying(false);
+      document.dispatchEvent(new CustomEvent('ambient-restore'));
+    };
+    audio.addEventListener('ended', onEnded);
+    return () => audio.removeEventListener('ended', onEnded);
   }, []);
 
   useEffect(() => {
@@ -813,7 +824,7 @@ export default function SetlistPage({
       {/* ── Nav — rendered inside this stacking context so mix-blend-mode: difference
           composites against the disc and red ring pixels, not a separate GPU layer */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '24px', zIndex: 200, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
-        <a ref={ssfbRef} href="/" style={{ ...navLinkStyle, color: navColors.ssfb, pointerEvents: 'auto' }}>SSFB</a>
+        <a ref={ssfbRef} href="/home" style={{ ...navLinkStyle, color: navColors.ssfb, pointerEvents: 'auto' }}>SSFB</a>
         <div style={{ marginLeft: 'auto', width: '240px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <a ref={mapRef} href="/explore" style={{ ...navLinkStyle, color: navColors.map, pointerEvents: 'auto' }}>MAP</a>
           <a ref={scheduleRef} href="/schedule" style={{ ...navLinkStyle, color: navColors.schedule, pointerEvents: 'auto' }}>SCHEDULE</a>
@@ -918,14 +929,14 @@ export default function SetlistPage({
       {/* ── Center content ───────────────────────────────────────────── */}
       <div
         className="absolute left-1/2 flex flex-col items-center"
-        style={{ top: '46%', transform: 'translate(-50%, -50%)', gap: '3vw', opacity: controlsIn ? 1 : 0, transition: 'opacity 0.8s ease' }}
+        style={{ top: '46%', transform: 'translate(-50%, -50%)', gap: '3vw', opacity: controlsIn ? 1 : 0, transition: 'opacity 0.8s ease', pointerEvents: 'none' }}
       >
         {/* Prev / current / next artist row — fixed grid so layout never shifts with name length */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 36vw 1fr', gridTemplateRows: 'clamp(100px, 14vw, 220px)', width: '90vw', alignItems: 'center', overflow: 'visible', transform: 'translateY(4px)' }}>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <button
               className="uppercase text-black"
-              style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', letterSpacing: '-0.64px', width: '13vw', textAlign: 'center', background: 'none', border: 'none', padding: 0, cursor: 'pointer', lineHeight: 1.3 }}
+              style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', letterSpacing: '-0.64px', width: '13vw', textAlign: 'center', background: 'none', border: 'none', padding: 0, cursor: 'pointer', lineHeight: 1.3, pointerEvents: 'auto' }}
               onClick={() => { playClickSound(); setDisplayIndex((i) => (i - 1 + n) % n); }}
             >
               {prevArtist.name}
@@ -941,7 +952,7 @@ export default function SetlistPage({
           <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
             <button
               className="uppercase text-black"
-              style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', letterSpacing: '-0.64px', width: '13vw', textAlign: 'center', background: 'none', border: 'none', padding: 0, cursor: 'pointer', lineHeight: 1.3 }}
+              style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', letterSpacing: '-0.64px', width: '13vw', textAlign: 'center', background: 'none', border: 'none', padding: 0, cursor: 'pointer', lineHeight: 1.3, pointerEvents: 'auto' }}
               onClick={() => { playClickSound(); setDisplayIndex((i) => (i + 1) % n); }}
             >
               {nextArtist.name}
@@ -950,7 +961,7 @@ export default function SetlistPage({
         </div>
 
         {/* Play/pause */}
-        <PlayPauseButton playing={isPlaying} onToggle={handlePlayPauseToggle} />
+        <div style={{ pointerEvents: 'auto' }}><PlayPauseButton playing={isPlaying} onToggle={handlePlayPauseToggle} /></div>
         <audio ref={audioRef} preload="none" />
         <audio ref={pauseSoundRef} src={PAUSE_SOUND_SRC} preload="auto" />
       </div>
@@ -1017,11 +1028,11 @@ export default function SetlistPage({
 
       {/* ── NavStrip ─────────────────────────────────────────────────── */}
       <NavStrip
-        currentStage={stage.label}
+        currentStage={stage.name}
         currentStageId={stage.id}
-        liveInfo={liveArtist ? `· LIVE NOW: ${liveArtist.name}` : undefined}
+        liveInfo={liveArtist ? `LIVE NOW: ${liveArtist.name}` : undefined}
         liveInfoVisible={liveInfoVisible}
-        otherStages={otherStages.map((s) => ({ label: s.label, id: s.id }))}
+        otherStages={otherStages.map((s) => ({ label: s.name, id: s.id }))}
       />
     </div>
   );

@@ -7,7 +7,6 @@ import { artists } from '@/data/artists';
 import NavStrip from '@/components/NavStrip/NavStrip';
 import StageScene from '@/components/StageScene/StageScene';
 import StippleText from '@/components/StippleText/StippleText';
-import { getCurrentLive } from '@/utils/liveArtist';
 
 export default function StageArtistsPage({ params }: { params: { stageId: string } }) {
   const stage = stages.find((s) => s.id === params.stageId);
@@ -17,13 +16,12 @@ export default function StageArtistsPage({ params }: { params: { stageId: string
   const sorted = [...stageArtists].sort((a, b) => (b.isLive ? 1 : 0) - (a.isLive ? 1 : 0));
   const otherStages = stages.filter((s) => s.id !== params.stageId);
 
-  const [liveArtist, setLiveArtist] = useState(() => getCurrentLive(stageArtists));
-
-  useEffect(() => {
-    const tick = () => setLiveArtist(getCurrentLive(stageArtists));
-    const id = setInterval(tick, 60_000);
-    return () => clearInterval(id);
-  }, []);
+  const STAGE_LIVE: Record<string, string> = {
+    'stage-a': 'nihiloxica',
+    'stage-b': 'vladimir-ivkovic-2',
+    'stage-c': 'alessandro-adriani-the-hacker',
+  };
+  const liveArtist = artists.find(a => a.id === STAGE_LIVE[params.stageId]);
 
   const [liveInfoVisible, setLiveInfoVisible] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -58,11 +56,11 @@ export default function StageArtistsPage({ params }: { params: { stageId: string
       </div>
 
       <NavStrip
-        currentStage={stage.label}
+        currentStage={stage.name}
         currentStageId={stage.id}
-        liveInfo={liveArtist ? `· LIVE NOW: ${liveArtist.name}` : undefined}
+        liveInfo={liveArtist ? `LIVE NOW: ${liveArtist.name}` : undefined}
         liveInfoVisible={liveInfoVisible}
-        otherStages={otherStages.map((s) => ({ label: s.label, id: s.id }))}
+        otherStages={otherStages.map((s) => ({ label: s.name, id: s.id }))}
       />
     </div>
   );

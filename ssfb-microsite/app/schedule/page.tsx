@@ -209,6 +209,7 @@ export default function SchedulePage() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const analyserDataRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
   const isHoveringLiveRef = useRef(false);
+  const pendingPlayRef = useRef<{ src: string; volume: number; live: boolean } | null>(null);
   const animRafRef = useRef<number | null>(null);
   const barRefs = useRef<(HTMLDivElement | null)[]>(new Array(NUM_WAVEFORM_BARS).fill(null));
   const mousePosRef = useRef({ x: -100, y: -100 });
@@ -246,19 +247,32 @@ export default function SchedulePage() {
     hoverAudioRef.current = new Audio();
     const audio = hoverAudioRef.current;
     const initCtx = () => {
-      if (audioCtxRef.current) return;
-      const ctx = new AudioContext();
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.75;
-      ctx.createMediaElementSource(audio).connect(analyser);
-      analyser.connect(ctx.destination);
-      audioCtxRef.current = ctx;
-      analyserRef.current = analyser;
-      analyserDataRef.current = new Uint8Array(analyser.frequencyBinCount);
+      if (!audioCtxRef.current) {
+        const ctx = new AudioContext();
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.75;
+        ctx.createMediaElementSource(audio).connect(analyser);
+        analyser.connect(ctx.destination);
+        audioCtxRef.current = ctx;
+        analyserRef.current = analyser;
+        analyserDataRef.current = new Uint8Array(analyser.frequencyBinCount);
+      }
+      // Resume context (starts suspended) and retry any autoplay-blocked request
+      audioCtxRef.current.resume().then(() => {
+        const p = pendingPlayRef.current;
+        if (!p) return;
+        pendingPlayRef.current = null;
+        audio.pause();
+        audio.src = encodeURI(p.src);
+        audio.loop = true;
+        audio.volume = p.volume;
+        isHoveringLiveRef.current = p.live;
+        audio.play().catch(() => {});
+      });
     };
-    document.addEventListener('click', initCtx, { once: true });
-    return () => { document.removeEventListener('click', initCtx); audio.pause(); };
+    document.addEventListener('pointerdown', initCtx, { once: true });
+    return () => { document.removeEventListener('pointerdown', initCtx); audio.pause(); };
   }, []);
 
   const stopWaveform = () => {
@@ -312,8 +326,11 @@ export default function SchedulePage() {
     audio.src = encodeURI(src);
     audio.loop = true;
     audio.volume = volume;
-    audio.play().catch(() => {});
     isHoveringLiveRef.current = live;
+    audio.play().catch(() => {
+      // Browser blocked autoplay — store and retry on first user interaction
+      pendingPlayRef.current = { src, volume, live };
+    });
   };
 
   const handleTimelineEnter = () => {
@@ -380,19 +397,6 @@ export default function SchedulePage() {
       className="flex flex-col flex-1 overflow-hidden relative cursor-none"
       style={{ backgroundImage: "url('/schedule-background.png')", backgroundSize: 'cover', backgroundPosition: 'center 30%' }}
     >
-      {/* 24×24 black rectangle cursor — always follows mouse */}
-      <div
-        className="fixed pointer-events-none z-50"
-        style={{
-          left: mousePos.x,
-          top: mousePos.y,
-          width: 24,
-          height: 24,
-          backgroundColor: '#000000',
-          transform: 'translate(-50%, -50%)',
-        }}
-      />
-
       {/* Vertical line — only in timeline section */}
       {inScheduleArea && (
         <div

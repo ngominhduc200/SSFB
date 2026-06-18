@@ -75,7 +75,7 @@ export default function NavStrip({
         <div
           className="flex items-center overflow-hidden"
           style={{
-            maxWidth: liveInfoVisible ? '400px' : '0px',
+            maxWidth: liveInfoVisible ? '800px' : '0px',
             opacity: liveInfoVisible ? 1 : 0,
             transition: 'max-width 2s cubic-bezier(0.4,0,0.2,1), opacity 1.2s ease',
           }}

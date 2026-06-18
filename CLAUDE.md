@@ -41,11 +41,24 @@ Stage labels use the **full venue name** (`'THE REST IS NOISE'`, `'RED LIGHT RAD
 
 ## Pages
 
-### `/` — Splash screen (`app/page.tsx`)
-Dark splash with festival name and ENTER → button linking to `/home`.
+### `/` — Entry page (`app/page.tsx` + `app/EntryClient.tsx`)
+Full-screen interactive entry. Two-layer video (grey base + red hover overlay) rendered through an SVG filter pipeline:
+- `grey-to-black` filter converts the base video to pure black output
+- `grey-to-red` filter uses a 3-step pipeline (saturate→threshold slope=100→black-to-red matrix) to produce exact `#FF0000` on hover bars
+- `captureStream()` pipes grey video frames to the red overlay element for frame-perfect sync (no drift between two decoders)
+
+**StippleText** "Strange Sounds From Beyond" rendered in red (`dotColor="#FF0000"`, `align="left"`, `canvasWidth={1400}`).
+
+**3 horizontal audio zones** (left → centre → right): Nihiloxica / Vladimir / Alessandro. Volume uses `linear²` falloff from each zone centre (`ZONE_CENTERS=[1/6, 1/2, 5/6]`, `ZONE_FALLOFF=1/3`, `ZONE_MAX_VOL=0.75`). Two zones play simultaneously when the cursor is between them.
+
+**CTA**: `[CLICK TO / ENTER SITE]` follows the cursor as a fixed-position red element (`cursor: none`). Plays `click.mp3` via `playClickSound` on click, then navigates to `/home`.
+
+**Corner labels**: black text, white background, `lineHeight: 1`, no padding. Amsterdam top-left, strangesoundsfrombeyond.com bottom-left, date top-right.
+
+Video playback rate: `0.6×`. Main container has `cursor: none` — the global `CustomCursor` is hidden on `/` via `pathname === '/'` check.
 
 ### `/home` — Home (`app/home/page.tsx`)
-Main navigation hub. Nav component SSFB link points here.
+Main navigation hub. All SSFB links site-wide point here — **never to `/`**.
 
 ### `/stage/[stageId]` — Stage page (`app/stage/[stageId]/page.tsx`)
 Three.js card grid of all artists for that stage. Cards fade in staggered on load and fade out on navigate. Stage name is rendered as a `<StippleText>` canvas (halftone dot effect) and fades out on first scroll. LIVE NOW banner derived from `utils/liveArtist.ts`, refreshed every 60 seconds.
@@ -63,7 +76,9 @@ Vinyl disc UI with rotating wheel, audio player, EQ knobs, tempo slider, sound f
 ### `/schedule` — Schedule (`app/schedule/page.tsx`)
 Horizontal scrollable timeline. Artist positions are computed with `timeToPercent(artist.time)` which parses our `'SAT HH:MM–HH:MM'` format.
 
-**Waveform**: 400 bars span the full 2140px scrollable content width, invisible except near the cursor (Gaussian bell curve). When hovering a live artist, bars pulse with Web Audio analyser data. Radio plays at 0.2 volume on timeline enter (ambient ducks); live artist hover plays the artist track at 0.2 volume; leaving a live artist resumes the radio.
+**Waveform**: 400 bars span the full 2140px scrollable content width, invisible except near the cursor (Gaussian bell curve). When hovering a live artist, bars pulse with Web Audio analyser data. Radio plays at 0.4 volume on timeline enter (ambient ducks); live artist hover plays the artist track at 0.2 volume; leaving a live artist resumes the radio.
+
+**Audio unlock pattern**: `switchAudio` stores a failed `play()` in `pendingPlayRef`. On the first `pointerdown`, `initCtx` creates the `AudioContext`, calls `ctx.resume()` immediately (new AudioContexts start suspended — skipping resume silences already-playing audio), then retries any pending play. Do not remove the `pendingPlayRef` retry or the `ctx.resume()` call inside `initCtx`.
 
 **On load (Saturday)**: timeline scrolls to horizontally center the 18:30 LIVE marker. Switching back to Saturday also re-centers it. Switching to Sunday scrolls to the start.
 
@@ -89,6 +104,7 @@ Horizontal scrollable timeline. Artist positions are computed with `timeToPercen
 | `Nav` | Top nav (SSFB → `/home`, MAP → `/explore`, SCHEDULE → `/schedule`) |
 | `HomeScene` | Home page scene |
 | `ArtistCard` | **Not currently rendered anywhere** — was replaced by Three.js canvas cards |
+| `CustomCursor` | Global 24×24 red square cursor (`border: 1.5px solid #000`). Rendered in `layout.tsx`. Hidden on `/` (entry page) via `usePathname`. Scales to 90% on `pointerdown`. `cursor: none !important` applied globally in `globals.css`. The schedule page **must not** render its own cursor element — the global one handles everything. |
 
 ---
 
@@ -152,7 +168,7 @@ To adjust the stipple appearance, change the params passed to `drawStipple` insi
 | `Alessandro.mp3` | `/public/audio/Alessandro.mp3` | Schedule click-to-play |
 | Per-artist tracks | `/public/audio/[Stage Name]/[Artist].mp3` | Setlist page — mapped in `ARTIST_AUDIO` in the setlist page. Missing artists fall back to an existing track from the same stage. |
 | `ambient.mp3` | `/public/sounds/ambient.mp3` | AmbientPlayer (all pages) |
-| `click.mp3` | `/public/sounds/click.mp3` | Nav / card click sound |
+| `click.mp3` | `/public/sounds/click.mp3` | Nav / card click sound; entry page CTA click |
 | `pause-soundeffect.mp3` | `/public/sounds/pause-soundeffect.mp3` | Setlist page pause button |
 
 **Note:** WAV files are gitignored (`*.wav`, `*.WAV`) — they are too large for GitHub. Share locally only.

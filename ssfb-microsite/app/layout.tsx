@@ -3,6 +3,7 @@ import './globals.css';
 import Nav from '@/components/Nav/Nav';
 import AmbientPlayer from '@/components/AmbientPlayer/AmbientPlayer';
 import GrainOverlay from '@/components/GrainOverlay/GrainOverlay';
+import CustomCursor from '@/components/CustomCursor/CustomCursor';
 
 export const metadata: Metadata = {
   title: 'SSFB — Strange Sounds From Beyond',
@@ -12,14 +13,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="preload" as="audio" href="/audio/ATA-KAK.mp3" />
-      </head>
+
       <body className="flex flex-col h-screen overflow-hidden">
         <Nav />
         <AmbientPlayer />
         {children}
         <GrainOverlay />
+        <CustomCursor />
       </body>
     </html>
   );

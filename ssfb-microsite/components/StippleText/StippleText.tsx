@@ -80,7 +80,8 @@ export default function StippleText({ text, dotColor = '#000000', canvasWidth = 
       });
     };
 
-    document.fonts.ready.then(render);
+    const fontSize = Math.floor(LINE_H * 0.76);
+    document.fonts.load(`600 ${fontSize}px 'Flama Condensed Trial'`).then(render).catch(render);
   }, [text, canvasWidth, align, anchorBottom]);
 
   return (
