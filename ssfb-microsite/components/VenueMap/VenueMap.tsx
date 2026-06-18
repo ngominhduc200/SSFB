@@ -162,15 +162,21 @@ async function createSession(): Promise<string> {
 interface VenueMapProps {
   onCenterChange?: (lat: number, lng: number) => void;
   onActivePreview?: (data: PreviewData | null) => void;
+  onHotspotClick?: (name: string) => void;
+  onHotspotPosition?: (pos: { x: number; y: number } | null) => void;
 }
 
-export default function VenueMap({ onCenterChange, onActivePreview }: VenueMapProps) {
+export default function VenueMap({ onCenterChange, onActivePreview, onHotspotClick, onHotspotPosition }: VenueMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const stippleRef = useRef<HTMLCanvasElement>(null);
   const cbRef = useRef(onCenterChange);
   cbRef.current = onCenterChange;
   const previewCbRef = useRef(onActivePreview);
   previewCbRef.current = onActivePreview;
+  const clickCbRef = useRef(onHotspotClick);
+  clickCbRef.current = onHotspotClick;
+  const hotspotPosCbRef = useRef(onHotspotPosition);
+  hotspotPosCbRef.current = onHotspotPosition;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -192,6 +198,7 @@ export default function VenueMap({ onCenterChange, onActivePreview }: VenueMapPr
 
     let mouseMoveHandler: ((e: MouseEvent) => void) | null = null;
     let wheelHandler: ((e: WheelEvent) => void) | null = null;
+    let clickHandler: (() => void) | null = null;
 
     // Stipple overlay setup
     const composeCanvas = document.createElement('canvas');
@@ -277,6 +284,7 @@ export default function VenueMap({ onCenterChange, onActivePreview }: VenueMapPr
 
         // RAF loop — lerps position/zoom and updates audio gains + preview state
         let prevPreviewKey: string | null = null;
+        let currentPreviewName: string | null = null; // read by click handler
 
         const tick = () => {
           if (!leafletMap) return;
@@ -305,16 +313,27 @@ export default function VenueMap({ onCenterChange, onActivePreview }: VenueMapPr
           // Preview detection — find the closest non-ocean hotspot in range
           let bestPreview: PreviewData | null = null;
           let bestGain = 0;
+          let bestSpot: Hotspot | null = null;
           for (const spot of HOTSPOTS) {
             if (!spot.preview) continue;
             const d = haversine(currentLat, currentLng, spot.lat, spot.lng);
             const g = proximityGain(d, spot.innerR, spot.outerR);
-            if (g > bestGain) { bestGain = g; bestPreview = spot.preview; }
+            if (g > bestGain) { bestGain = g; bestPreview = spot.preview; bestSpot = spot; }
           }
           const previewKey = bestGain > 0.05 ? (bestPreview?.name ?? null) : null;
           if (previewKey !== prevPreviewKey) {
             prevPreviewKey = previewKey;
             previewCbRef.current?.(previewKey ? bestPreview : null);
+          }
+          currentPreviewName = previewKey;
+
+          // Emit screen-space position of the active hotspot for the marker overlay
+          if (previewKey && bestSpot && leafletMap) {
+            const pt   = leafletMap.latLngToContainerPoint([bestSpot.lat, bestSpot.lng]);
+            const rect = el.getBoundingClientRect();
+            hotspotPosCbRef.current?.({ x: pt.x + rect.left, y: pt.y + rect.top });
+          } else if (!previewKey) {
+            hotspotPosCbRef.current?.(null);
           }
 
           // Stipple overlay — composite visible tile images then draw halftone pass
@@ -354,8 +373,12 @@ export default function VenueMap({ onCenterChange, onActivePreview }: VenueMapPr
           targetZoom = clamp(targetZoom + (e.deltaY < 0 ? 1 : -1) * 0.8, ZOOM_MIN, ZOOM_MAX);
         };
 
+        clickHandler = () => {
+          if (currentPreviewName) clickCbRef.current?.(currentPreviewName);
+        };
         el.addEventListener('mousemove', mouseMoveHandler);
         el.addEventListener('wheel', wheelHandler, { passive: false });
+        el.addEventListener('click', clickHandler);
       } catch (err) {
         console.error('[VenueMap]', err);
       }
@@ -368,6 +391,7 @@ export default function VenueMap({ onCenterChange, onActivePreview }: VenueMapPr
       document.removeEventListener('pointerdown', startAudio);
       if (mouseMoveHandler) el.removeEventListener('mousemove', mouseMoveHandler);
       if (wheelHandler) el.removeEventListener('wheel', wheelHandler);
+      if (clickHandler) el.removeEventListener('click', clickHandler);
       leafletMap?.remove();
       for (const { audioEl } of players.values()) { audioEl.pause(); audioEl.src = ''; }
       portEl.pause(); portEl.src = '';

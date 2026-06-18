@@ -28,16 +28,18 @@ const exploreLinkStyle = {
 export default function Nav() {
   const pathname = usePathname();
   const isExplore = pathname === '/explore';
+  const isHome    = pathname === '/home';
+  const useMapStyle = isExplore || isHome;
 
   return (
     <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, padding: '24px 24px 0' }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        {!isExplore && (
+        {!isExplore && !isHome && (
           <Link href="/home" style={linkStyle} onClick={playClickSound}>SSFB</Link>
         )}
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Link href="/explore" style={isExplore ? exploreLinkStyle : linkStyle} onClick={playClickSound}>MAP</Link>
-          <Link href="/schedule" style={isExplore ? exploreLinkStyle : linkStyle} onClick={playClickSound}>SCHEDULE</Link>
+          <Link href="/explore"  style={useMapStyle ? exploreLinkStyle : linkStyle} onClick={playClickSound}>MAP</Link>
+          <Link href="/schedule" style={useMapStyle ? exploreLinkStyle : linkStyle} onClick={playClickSound}>SCHEDULE</Link>
         </div>
       </div>
     </nav>

@@ -125,6 +125,30 @@ a {
   to   { transform: translateX(-50%); }
 }
 
+@keyframes zoom-to-3d {
+  0%   { transform: scale(1);   opacity: 1; }
+  60%  { transform: scale(2.8); opacity: 1; }
+  100% { transform: scale(5);   opacity: 0; }
+}
+
+@keyframes blip-in {
+  0%   { transform: scaleY(0.015) scaleX(0.4); }
+  30%  { transform: scaleY(0.015) scaleX(1);   }
+  100% { transform: scaleY(1)     scaleX(1);   }
+}
+
+@keyframes blip-out {
+  0%   { transform: scaleY(1)     scaleX(1);   opacity: 1; }
+  55%  { transform: scaleY(0.015) scaleX(1);   opacity: 1; }
+  82%  { transform: scaleY(0.015) scaleX(0.3); opacity: 1; }
+  100% { transform: scaleY(0.015) scaleX(0);   opacity: 0; }
+}
+
+@keyframes home-ticker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
 @keyframes nav-highlight-sweep {
   0%   { clip-path: inset(0 100% 0 0); background-color: #000; }
   65%  { clip-path: inset(0 0%   0 0); background-color: #000; }

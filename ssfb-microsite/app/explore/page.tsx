@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { stages } from '@/data/stages';
 import VenueMap, { type PreviewData } from '@/components/VenueMap/VenueMap';
@@ -23,10 +24,12 @@ const CARD_W = 220;
 const CARD_H = 280;
 
 export default function ExplorePage() {
+  const router = useRouter();
   const [center, setCenter] = useState(NDSM);
   const [activePreview, setActivePreview] = useState<PreviewData | null>(null);
   const [introOpaque, setIntroOpaque] = useState(false);
   const [introGone, setIntroGone] = useState(false);
+  const [zooming, setZooming] = useState(false);
 
   // Smooth custom cursor — lerps toward real mouse position each RAF tick
   const cursorRef = useRef<HTMLDivElement>(null);
@@ -34,6 +37,7 @@ export default function ExplorePage() {
   const topLineRef = useRef<HTMLDivElement>(null);
   const bottomLineRef = useRef<HTMLDivElement>(null);
   const previewCardRef = useRef<HTMLDivElement>(null);
+  const hotspotMarkerRef = useRef<HTMLDivElement>(null);
   const mouseRef = useRef({ x: -100, y: -100 });
   const displayRef = useRef({ x: -100, y: -100 });
   const hoverProgressRef = useRef(0); // drives line height
@@ -127,18 +131,76 @@ export default function ExplorePage() {
     };
   }, []);
 
+  const handleHotspotClick = (name: string) => {
+    if (name !== 'STAGE' || zooming) return;
+    setZooming(true);
+    setTimeout(() => router.push('/home?from=explore'), 650);
+  };
+
   const highlightedItems = activePreview ? (HOTSPOT_HIGHLIGHTS[activePreview.name] ?? []) : [];
 
   return (
     <main className="relative flex-1 overflow-hidden cursor-none">
-      {/* Interactive Google Map — fills viewport */}
-      <VenueMap
-        onCenterChange={(lat, lng) => setCenter({ lat, lng })}
-        onActivePreview={(data) => {
-          setActivePreview(data);
-          isHoveringRef.current = data !== null;
+      {/* Interactive Google Map — fills viewport; scales out on STAGE click */}
+      <div
+        style={{
+          position: 'absolute', inset: 0,
+          transformOrigin: 'center center',
+          animation: zooming ? 'zoom-to-3d 0.65s ease-in forwards' : undefined,
         }}
-      />
+      >
+        <VenueMap
+          onCenterChange={(lat, lng) => setCenter({ lat, lng })}
+          onActivePreview={(data) => {
+            setActivePreview(data);
+            isHoveringRef.current = data !== null;
+          }}
+          onHotspotClick={handleHotspotClick}
+          onHotspotPosition={(pos) => {
+            const el = hotspotMarkerRef.current;
+            if (!el) return;
+            if (pos) {
+              el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+              el.style.opacity = '1';
+            } else {
+              el.style.opacity = '0';
+            }
+          }}
+        />
+      </div>
+
+      {/* Hotspot marker — red square + name label, position driven by VenueMap via direct DOM update */}
+      <div
+        ref={hotspotMarkerRef}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          opacity: 0,
+          transition: 'opacity 0.2s ease',
+          pointerEvents: 'none',
+          zIndex: 70,
+          transform: 'translate(-50%, -50%)',
+        }}
+      >
+        <div style={{ width: 12, height: 12, backgroundColor: '#FF0000', flexShrink: 0 }} />
+        <div style={{
+          backgroundColor: '#000',
+          padding: '4px 8px',
+          fontFamily: 'var(--font-ui)',
+          fontSize: 12,
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          letterSpacing: '-0.48px',
+          color: '#FF0000',
+          whiteSpace: 'nowrap',
+        }}>
+          {activePreview?.name ?? ''}
+        </div>
+      </div>
 
       {/* Red logo — replaces the plain Nav link on this page */}
       <Link
