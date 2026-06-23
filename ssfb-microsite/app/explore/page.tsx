@@ -33,15 +33,12 @@ export default function ExplorePage() {
 
   // Smooth custom cursor — lerps toward real mouse position each RAF tick
   const cursorRef = useRef<HTMLDivElement>(null);
-  const cursorSquareRef = useRef<HTMLDivElement>(null);
   const topLineRef = useRef<HTMLDivElement>(null);
   const bottomLineRef = useRef<HTMLDivElement>(null);
   const previewCardRef = useRef<HTMLDivElement>(null);
   const hotspotMarkerRef = useRef<HTMLDivElement>(null);
   const mouseRef = useRef({ x: -100, y: -100 });
   const displayRef = useRef({ x: -100, y: -100 });
-  const hoverProgressRef = useRef(0); // drives line height
-  const colorProgressRef = useRef(0); // drives cursor color — stays at 1 until lines are gone
   const isHoveringRef = useRef(false);
   const prevMouseVelRef = useRef({ x: 0, y: 0 }); // for velocity-based intro dismiss
 
@@ -70,7 +67,6 @@ export default function ExplorePage() {
     const autoDismiss = setTimeout(dismissIntro, 5000);
 
     const LERP = 0.12;
-    const HOVER_LERP = 0.07;
     const LINE_MAX = 700;
     const VELOCITY_DISMISS = 10; // px/frame — vigorous movement threshold
     let rafId: number;
@@ -105,15 +101,8 @@ export default function ExplorePage() {
       }
       prevMouseVelRef.current = { x: mouseRef.current.x, y: mouseRef.current.y };
 
-      // Cursor hotspot microinteraction
-      hoverProgressRef.current +=
-        ((isHoveringRef.current ? 1 : 0) - hoverProgressRef.current) * HOVER_LERP;
-      const colorTarget = isHoveringRef.current || hoverProgressRef.current > 0.03 ? 1 : 0;
-      colorProgressRef.current += (colorTarget - colorProgressRef.current) * HOVER_LERP;
-      const r = Math.round(colorProgressRef.current * 255);
-      const lineH = Math.round(hoverProgressRef.current * LINE_MAX);
-      if (cursorSquareRef.current)
-        cursorSquareRef.current.style.backgroundColor = `rgb(${r},0,0)`;
+      // Cursor hotspot microinteraction — snap directly, no transition
+      const lineH = isHoveringRef.current ? LINE_MAX : 0;
       if (topLineRef.current) topLineRef.current.style.height = `${lineH}px`;
       if (bottomLineRef.current) bottomLineRef.current.style.height = `${lineH}px`;
 
@@ -208,8 +197,21 @@ export default function ExplorePage() {
         onClick={playClickSound}
         style={{ position: 'fixed', top: 18, left: 24, zIndex: 60, display: 'block', lineHeight: 0, backgroundColor: '#000', padding: '8px 10px' }}
       >
-        <img src="/images/logored.svg" alt="SSFB" style={{ width: 90, height: 'auto', display: 'block' }} />
+        <img src="/images/logored.svg" alt="SSFB" style={{ width: 70, height: 'auto', display: 'block' }} />
       </Link>
+
+      {/* Lat/lng — bottom right */}
+      <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+        <span style={{ fontFamily: 'var(--font-ui)', fontWeight: 600, fontSize: 16, textTransform: 'uppercase', letterSpacing: '-0.64px', color: '#FF0000', backgroundColor: '#000', padding: '2px 8px' }}>
+          LATITUDE · LONGITUDE
+        </span>
+        <span style={{ fontFamily: 'var(--font-ui)', fontSize: 14, letterSpacing: '-0.56px', color: '#FF0000', backgroundColor: '#000', padding: '2px 8px' }}>
+          {center.lat.toFixed(4)}° N
+        </span>
+        <span style={{ fontFamily: 'var(--font-ui)', fontSize: 14, letterSpacing: '-0.56px', color: '#FF0000', backgroundColor: '#000', padding: '2px 8px' }}>
+          {center.lng.toFixed(4)}° E
+        </span>
+      </div>
 
       {/* Bottom overlay */}
       <div className="absolute bottom-0 left-0 right-0 flex items-end px-6 pb-6 h-55 z-10">
@@ -310,18 +312,6 @@ export default function ExplorePage() {
           </div>
         </nav>
 
-        {/* Right: live lat/lng — updates as the map is panned */}
-        <div className="ml-auto flex flex-col items-end gap-1.5 mb-2">
-          <span className="font-ui font-semibold text-[16px] uppercase tracking-[-0.64px] text-red" style={{ backgroundColor: '#000', padding: '2px 8px' }}>
-            LATITUDE · LONGITUDE
-          </span>
-          <span className="font-ui text-[14px] tabular-nums tracking-[-0.56px] text-red" style={{ backgroundColor: '#000', padding: '2px 8px' }}>
-            {center.lat.toFixed(4)}° N
-          </span>
-          <span className="font-ui text-[14px] tabular-nums tracking-[-0.56px] text-red" style={{ backgroundColor: '#000', padding: '2px 8px' }}>
-            {center.lng.toFixed(4)}° E
-          </span>
-        </div>
       </div>
       {/* Hotspot preview card — follows cursor, fades in when near a sound zone */}
       <div
@@ -413,8 +403,7 @@ export default function ExplorePage() {
       >
         {/* Colored square — interpolates black → red on hotspot enter */}
         <div
-          ref={cursorSquareRef}
-          style={{ width: 24, height: 24, backgroundColor: '#000' }}
+          style={{ width: 24, height: 24, backgroundColor: '#FF0000', border: '1.5px solid #000' }}
         />
 
         {/* Intro label — fades in on load, dismisses after 5s or on vigorous movement */}
