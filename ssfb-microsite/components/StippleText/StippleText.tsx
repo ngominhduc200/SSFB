@@ -54,7 +54,7 @@ export default function StippleText({ text, dotColor = '#000000', canvasWidth = 
       off.fillStyle = '#ffffff';
       off.fillRect(0, 0, canvasWidth, CANVAS_H);
       off.font = font;
-      off.letterSpacing = `${-0.02 * fontSize}px`;
+      if ('letterSpacing' in off) off.letterSpacing = `${-0.02 * fontSize}px`;
       off.textAlign = align;
       off.textBaseline = anchorBottom ? 'alphabetic' : 'middle';
       off.fillStyle = '#000000';

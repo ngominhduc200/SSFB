@@ -35,13 +35,19 @@ export default function AmbientPlayer() {
     audioRef.current = audio;
 
     function startAmbient() {
-      audio.play().then(() => fadeTo(AMBIENT_VOLUME)).catch(() => {});
+      // Recreate the element inside the gesture so Safari unlocks it
+      const fresh = new Audio(AMBIENT_SRC);
+      fresh.loop = true;
+      fresh.volume = 0;
+      audioRef.current = fresh;
+      fresh.play().then(() => fadeTo(AMBIENT_VOLUME)).catch(() => {});
     }
 
     // Try immediate autoplay; if blocked, wait for first interaction
     audio.play().then(() => fadeTo(AMBIENT_VOLUME)).catch(() => {
-      document.addEventListener('click', startAmbient, { once: true });
-      document.addEventListener('keydown', startAmbient, { once: true });
+      document.addEventListener('click',      startAmbient, { once: true });
+      document.addEventListener('touchstart', startAmbient, { once: true });
+      document.addEventListener('keydown',    startAmbient, { once: true });
     });
 
     function onDuck() { fadeTo(0); }
@@ -56,8 +62,9 @@ export default function AmbientPlayer() {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       document.removeEventListener('ambient-duck', onDuck);
       document.removeEventListener('ambient-restore', onRestore);
-      document.removeEventListener('click', startAmbient);
-      document.removeEventListener('keydown', startAmbient);
+      document.removeEventListener('click',      startAmbient);
+      document.removeEventListener('touchstart', startAmbient);
+      document.removeEventListener('keydown',    startAmbient);
     };
   }, []);
 
