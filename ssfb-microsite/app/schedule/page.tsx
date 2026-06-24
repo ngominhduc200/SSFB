@@ -264,10 +264,12 @@ export default function SchedulePage() {
         analyserRef.current = analyser;
         analyserDataRef.current = new Uint8Array(analyser.frequencyBinCount);
       }
-      // Resume context (starts suspended) and retry any autoplay-blocked request
-      audioCtxRef.current.resume().then(() => {
-        const p = pendingPlayRef.current;
-        if (!p) return;
+      // Resume context synchronously within the user gesture so Safari recognises it.
+      // Do NOT defer audio.play() into .then() — Safari strips the gesture context
+      // from Promise callbacks and will block the play.
+      audioCtxRef.current.resume();
+      const p = pendingPlayRef.current;
+      if (p) {
         pendingPlayRef.current = null;
         audio.pause();
         audio.src = encodeURI(p.src);
@@ -275,7 +277,7 @@ export default function SchedulePage() {
         audio.volume = p.volume;
         isHoveringLiveRef.current = p.live;
         audio.play().catch(() => {});
-      });
+      }
     };
     document.addEventListener('pointerdown', initCtx, { once: true });
     return () => { document.removeEventListener('pointerdown', initCtx); audio.pause(); };
