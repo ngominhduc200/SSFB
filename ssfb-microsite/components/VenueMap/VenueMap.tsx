@@ -182,6 +182,7 @@ export default function VenueMap({ onCenterChange, onActivePreview, onHotspotCli
     const el = containerRef.current;
     if (!el) return;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let leafletMap: any = null;
     let cancelled = false;
     let rafId = 0;
@@ -213,7 +214,8 @@ export default function VenueMap({ onCenterChange, onActivePreview, onHotspotCli
     window.addEventListener('resize', resizeStipple);
 
     // --- Spatial audio ---
-    const audioCtx = new AudioContext();
+    const AudioCtx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+    const audioCtx = new AudioCtx();
     const hotspotGroups = groupBySrc(HOTSPOTS);
 
     // src → { gainNode, audioEl }

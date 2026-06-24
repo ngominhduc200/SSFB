@@ -152,7 +152,12 @@ function ArtistLabel({ artist, muted, lineBreakAfter, onHoverStart, onHoverEnd }
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, []);
 
-  const parts = lineBreakAfter ? text.split(new RegExp(`(?<=${lineBreakAfter})\\s*`, 'i')) : null;
+  const parts = (() => {
+    if (!lineBreakAfter) return null;
+    const idx = text.toLowerCase().indexOf(lineBreakAfter.toLowerCase());
+    if (idx < 0) return null;
+    return [text.slice(0, idx + lineBreakAfter.length), text.slice(idx + lineBreakAfter.length).trimStart()];
+  })();
 
   return (
     <div
@@ -248,7 +253,8 @@ export default function SchedulePage() {
     const audio = hoverAudioRef.current;
     const initCtx = () => {
       if (!audioCtxRef.current) {
-        const ctx = new AudioContext();
+        const AudioCtx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+        const ctx = new AudioCtx();
         const analyser = ctx.createAnalyser();
         analyser.fftSize = 256;
         analyser.smoothingTimeConstant = 0.75;

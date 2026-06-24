@@ -592,7 +592,8 @@ export default function SetlistPage({
 
   function ensureAudioGraph() {
     if (audioCtxRef.current || !audioRef.current) return;
-    const ctx = new AudioContext();
+    const AudioCtx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+    const ctx = new AudioCtx();
     const source = ctx.createMediaElementSource(audioRef.current);
     const highFilter = ctx.createBiquadFilter();
     highFilter.type = 'highshelf';
@@ -824,7 +825,9 @@ export default function SetlistPage({
       {/* ── Nav — rendered inside this stacking context so mix-blend-mode: difference
           composites against the disc and red ring pixels, not a separate GPU layer */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '24px', zIndex: 200, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
-        <a ref={ssfbRef} href="/home" style={{ ...navLinkStyle, color: navColors.ssfb, pointerEvents: 'auto' }}>SSFB</a>
+        <a ref={ssfbRef} href="/home" style={{ display: 'block', lineHeight: 0, pointerEvents: 'auto' }}>
+          <img src="/images/logored.svg" alt="SSFB" style={{ width: 70, height: 'auto', display: 'block' }} />
+        </a>
         <div style={{ marginLeft: 'auto', width: '240px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <a ref={mapRef} href="/explore" style={{ ...navLinkStyle, color: navColors.map, pointerEvents: 'auto' }}>MAP</a>
           <a ref={scheduleRef} href="/schedule" style={{ ...navLinkStyle, color: navColors.schedule, pointerEvents: 'auto' }}>SCHEDULE</a>

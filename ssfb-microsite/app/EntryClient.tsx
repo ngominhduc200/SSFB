@@ -103,8 +103,9 @@ export default function EntryClient() {
     const x = e.clientX;
 
     if (overlayWrapRef.current) {
-      overlayWrapRef.current.style.maskImage =
-        `linear-gradient(to right, transparent calc(${x}px - 30px), black calc(${x}px - 30px), black calc(${x}px + 30px), transparent calc(${x}px + 30px))`;
+      const mask = `linear-gradient(to right, transparent calc(${x}px - 30px), black calc(${x}px - 30px), black calc(${x}px + 30px), transparent calc(${x}px + 30px))`;
+      overlayWrapRef.current.style.maskImage = mask;
+      (overlayWrapRef.current.style as unknown as { webkitMaskImage: string }).webkitMaskImage = mask;
     }
 
     if (ctaRef.current) {
@@ -125,7 +126,10 @@ export default function EntryClient() {
   }, []);
 
   const handleMouseLeave = useCallback(() => {
-    if (overlayWrapRef.current) overlayWrapRef.current.style.maskImage = HIDDEN_MASK;
+    if (overlayWrapRef.current) {
+      overlayWrapRef.current.style.maskImage = HIDDEN_MASK;
+      (overlayWrapRef.current.style as unknown as { webkitMaskImage: string }).webkitMaskImage = HIDDEN_MASK;
+    }
     zoneRefs.current.forEach(audio => audio?.pause());
     if (ctaRef.current) ctaRef.current.style.opacity = '0';
   }, []);
@@ -185,7 +189,7 @@ export default function EntryClient() {
         <div
           ref={overlayWrapRef}
           className="absolute inset-0 pointer-events-none"
-          style={{ maskImage: HIDDEN_MASK }}
+          style={{ maskImage: HIDDEN_MASK, WebkitMaskImage: HIDDEN_MASK }}
         >
           <video
             ref={redVideoRef}

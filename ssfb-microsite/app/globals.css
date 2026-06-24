@@ -150,7 +150,7 @@ a {
 }
 
 @keyframes nav-highlight-sweep {
-  0%   { clip-path: inset(0 100% 0 0); background-color: #000; }
-  65%  { clip-path: inset(0 0%   0 0); background-color: #000; }
-  100% { clip-path: inset(0 0%   0 0); background-color: #FF0000; }
+  0%   { clip-path: inset(0 100% 0 0); -webkit-clip-path: inset(0 100% 0 0); background-color: #000; }
+  65%  { clip-path: inset(0 0%   0 0); -webkit-clip-path: inset(0 0%   0 0); background-color: #000; }
+  100% { clip-path: inset(0 0%   0 0); -webkit-clip-path: inset(0 0%   0 0); background-color: #FF0000; }
 }
